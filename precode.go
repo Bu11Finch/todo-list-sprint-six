@@ -63,19 +63,20 @@ func postTask(w http.ResponseWriter, r *http.Request) {
 
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
-		http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, "Не удалось считать данные", http.StatusBadRequest)
 		return
 	}
 
 	if err = json.Unmarshal(buf.Bytes(), &task); err != nil {
-		http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, "Не удалось десериализировать", http.StatusBadRequest)
 		return
 	}
 
-	for _, t := range tasks {
-		if task.ID == t.ID {
-			http.Error(w, "", http.StatusBadRequest)
-		}
+	_, ok := tasks[task.ID]
+
+	if ok {
+		http.Error(w, "Такой ID уже занят", http.StatusBadRequest)
+		return
 	}
 	tasks[task.ID] = task
 
@@ -94,7 +95,7 @@ func getTask(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := json.Marshal(task)
 	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
+		http.Error(w, "Не удалось сериализировать", http.StatusInternalServerError)
 		return
 	}
 
@@ -111,7 +112,7 @@ func deleteTask(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	if id == "" {
-		http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, "Пустой параметр", http.StatusBadRequest)
 		return
 	}
 
